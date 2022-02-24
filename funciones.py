@@ -1,7 +1,7 @@
 import re
 
 
-TOS_dict = {"000": "De rutina",
+TOS_dict = {"000": "De rutina", #Types of service, ipv4
             "001": "Prioritario",
             "010": "Inmediato",
             "011": "Relampago",
@@ -10,7 +10,7 @@ TOS_dict = {"000": "De rutina",
             "110": "Control de trabajo de Internet",
             "111": "Control de red"}
 
-hardwareTypes = {
+hardwareTypes = { #RARP/ARP
     "1": "Ethernet(10 Mb)",
     "6": "IEEE 802 Newtorks",
     "7": "ARCNET",
@@ -22,7 +22,7 @@ hardwareTypes = {
     "2": "Serial line"
 }
 
-protocolos = {
+protocolos = { #protocolos ipv4
     "1": "ICMPv4",
     "6": "TCP",
     "17": "UDP",
@@ -31,7 +31,7 @@ protocolos = {
     "121": "SMP"
 }
 
-TYPE = {
+TYPE = { #icmpv4
     "0":"Respuesta de eco",
     "3": "Destino inaccesible",
     "4" : "Disminucion de trafico desde el origen",
@@ -40,7 +40,7 @@ TYPE = {
     "11": "Tiempo excedido para datagrama"
 }
 
-CODE = {
+CODE = { #impv4
     "0":"No se puede llegar a la red",
     "1": "No se puede llegar al host",
     "2" : "Destino no dispone del protocolo solicitado",
@@ -124,7 +124,6 @@ def CrearDireccion(numero):
     binario = toBinary(numero, 32)
     IP = str(int(binario[0:8], 2)) + "." + str(int(binario[8:16], 2)) + "." + str(int(binario[16:24], 2)) + "." + str(int(binario[24:32], 2))
     return  IP
-
 
 def deleteElements(lista, numero):
     for x in range(0, numero):
