@@ -8,11 +8,12 @@ Miriam Paola Rodriguez Martin
 import funciones as funct
 lista_datos = []
 lista_IP = []
+dicc_paraARP = funct.hardwareTypes
 dict_type = {"08:00": "IPv4",
              "08:06": "ARP",
              "80:35": "RARP",
              "08:DD": "IPv6"}
-with open("ethernet_ipv4_icmp.bin", mode="rb") as file:
+with open("./Files/ethernet_arp_request.bin", mode="rb") as file:
     content = file.read()
     for _bytes in content:
         lista_datos.append(hex(_bytes)[2:].zfill(2))
@@ -53,3 +54,23 @@ with open("ethernet_ipv4_icmp.bin", mode="rb") as file:
         print("Checksum: " + lista_IP[0] + ":" + lista_IP[1])
         funct.deleteElements(lista_IP, 2)
         print(funct.imprimirDatos(lista_IP, name="Data"))
+    elif (dict_type[f'{lista_datos[12]}:{lista_datos[13]}'] == "ARP" or dict_type[f'{lista_datos[12]}:{lista_datos[13]}'] == "RARP"):
+        print(dict_type[f'{lista_datos[12]}:{lista_datos[13]}'])
+        print("Tipo de hardware:", dicc_paraARP[f'{int(lista_IP[0] + lista_IP[1], 10)}'] )
+        funct.deleteElements(lista_IP, 2)
+        print("Tipo de protocolo: ", f'{lista_IP[0]}:{lista_IP[1]}', dict_type[f'{lista_IP[0]}:{lista_IP[1]}'])
+        funct.deleteElements(lista_IP, 2)
+        print("Longitud direccion de hardware:", lista_IP[0])
+        print("Longitud direccion de protocolo:", lista_IP[1])
+        funct.deleteElements(lista_IP, 2)
+        print("Codigo de operacion:", funct.opcode(lista_IP))
+        funct.deleteElements(lista_IP, 2)
+        print("Direccion hardware del emisor:", funct.CodeAddresses(lista_IP, 6))
+        funct.deleteElements(lista_IP, 6)
+        print("Direccion IP del emisor:", funct.CodeAddresses(lista_IP, 4, False))
+        funct.deleteElements(lista_IP, 4)
+        print("Direccion hardware del receptor:", funct.CodeAddresses(lista_IP, 6))
+        funct.deleteElements(lista_IP, 6)
+        print("Direccion Ip del receptor:", funct.CodeAddresses(lista_IP, 4, False))
+        funct.deleteElements(lista_IP, 4)
+        print(lista_IP)        

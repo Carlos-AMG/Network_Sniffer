@@ -1,3 +1,6 @@
+import re
+
+
 TOS_dict = {"000": "De rutina",
             "001": "Prioritario",
             "010": "Inmediato",
@@ -6,6 +9,18 @@ TOS_dict = {"000": "De rutina",
             "101": "Procesando llamada critica y de emergencia",
             "110": "Control de trabajo de Internet",
             "111": "Control de red"}
+
+hardwareTypes = {
+    "1": "Ethernet(10 Mb)",
+    "6": "IEEE 802 Newtorks",
+    "7": "ARCNET",
+    "15": "Frame relay",
+    "16": "Asynchronous Transfer Mode (ATM)",
+    "17": "HDLC",
+    "18": "Fibre Channel",
+    "19": "Asynchronous Transfer Mode (ATM)",
+    "2": "Serial line"
+}
 
 protocolos = {
     "1": "ICMPv4",
@@ -121,3 +136,29 @@ def compararICMP(data, type=0):
         print("Mensaje informativo:", TYPE[informacion])
     else:
         print("Codgigos de error:", CODE[informacion])
+
+def opcode(lista): #para rarp/arp
+    temporal = int(lista[0] + lista[1], 10)
+    if temporal == 1:
+        return "Solicitud ARP"
+    elif temporal == 2:
+        return "Respuesta ARP"
+    elif temporal == 3:
+        return "Solitud RARP"
+    elif temporal == 4:
+        return "Respuesta RARP"
+
+def CodeAddresses(lista, bytes, hex=True):
+    direccion = ""
+    if hex:
+        for x in range(0, bytes):
+            if x == 0 or x == bytes:
+                direccion += lista[x].zfill(2)
+            else:
+                direccion += ":" + lista[x].zfill(2)
+        return direccion
+    else:
+        binario = toBinary(lista[0] + lista[1] + lista[2] + lista[3])
+        IP = str(int(binario[0:8], 2)) + "." + str(int(binario[8:16], 2)) + "." + str(int(binario[16:24], 2)) + "." + str(int(binario[24:32], 2))
+        return  IP
+
