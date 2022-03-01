@@ -82,15 +82,21 @@ with open("./Files/ipv6_icmpv6_ping.bin", mode="rb") as file:
         funct.deleteElements(lista_IP, 4)
         print("Tamano de datos:", int(lista_IP[0]+lista_IP[1], 16), "octetos")
         funct.deleteElements(lista_IP, 2)
-        print("Encabezado siguiente:", funct.protocolos[str(int(lista_IP[0], 16))])
+        print("Encabezado siguiente:", funct.protocolos[str(int(lista_IP[0], 16))]) #icmpv6
         lista_IP.remove(lista_IP[0])
         print("Limite de salto:", int(lista_IP[0], 16))
         lista_IP.remove(lista_IP[0])
-        print("Direccion de origen:", funct.CodeAddresses(lista_IP, 8))
-        funct.deleteElements(lista_IP, 8)
-        print("Direccion de destino:", funct.CodeAddresses(lista_IP, 8))
-        funct.deleteElements(lista_IP, 8)
-        print(funct.imprimirDatos(lista_datos, name="Data"))
+        print("Direccion de origen:", funct.CodeAddresses(lista_IP, 16))
+        funct.deleteElements(lista_IP, 16)
+        print("Direccion de destino:", funct.CodeAddresses(lista_IP, 16))
+        funct.deleteElements(lista_IP, 16)
+        print(funct.imprimirDatos(lista_IP, name="Data"))
+        funct.compararICMPV6(lista_IP[0] + lista_IP[1])
+        funct.deleteElements(lista_IP, 2)
+        print("Checksum:", lista_IP[0] + ":" + lista_IP[1])
+        funct.deleteElements(lista_IP, 2)
+        print(lista_IP)
+        #print("Protocolo:", funct.protocolos[str(int(lista_IP[0], 16))])
         
 
 

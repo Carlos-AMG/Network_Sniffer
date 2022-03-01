@@ -40,6 +40,33 @@ TYPE = { #icmpv4
     "11": "Tiempo excedido para datagrama"
 }
 
+TYPE_ICMPv6 = { 
+    "1": ("Mensaje de destino inalcanzable",{
+    "0": "No existe ruta destino",
+    "1": "Comunicacion con el destino adrministrativamente prohibida",
+    "2" : "No asignado",
+    "3" : "Direccion inalcanzable"
+    }),
+    "2": ("Mensaje de paquete demasiado grande", None),
+    "3": ("Time exceeded message",{
+    "0": "El limite de tiempo excedido",
+    "1": "Tiempo de reensamble de fragmento excedido"
+    }),
+    "4" : ("Mensaje de problema de parametro",{
+    "0": "El campo del encabezado erroneo encontro",
+    "1": "El tipo siguiente desconocido del encabezado encontro",
+    "2" : "Opcion desconocida del IPV6 encontrada"
+    }),
+    "128": ("Mensaje del pedido de eco", None),
+    "129" : ("Mensaje de respuesta de eco", None),
+    "133": ("Mensaje de solicitud del router", None),
+    "134": ("Mensaje de anuncio del router", None),
+    "135" : ("Mensaje de solicitud vecino", None),
+    "136": ("Mensaje de anuncio de vecino", None),
+    "137": ("Reoriente el mensaje", None)
+}
+
+
 CODE = { #impv4
     "0":"No se puede llegar a la red",
     "1": "No se puede llegar al host",
@@ -161,3 +188,10 @@ def CodeAddresses(lista, bytes, hex=True):
         IP = str(int(binario[0:8], 2)) + "." + str(int(binario[8:16], 2)) + "." + str(int(binario[16:24], 2)) + "." + str(int(binario[24:32], 2))
         return  IP
 
+def compararICMPV6(data, choice=True):
+    byte1 = str(int(data[:2], 16))
+    byte2 = str(int(data[2:4], 16))
+    aux = TYPE_ICMPv6[byte1]
+    print("Tipo:", aux[0])
+    if aux[1]:
+        print("Codigo:", aux[1][byte2])
