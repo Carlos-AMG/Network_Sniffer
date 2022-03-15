@@ -1,3 +1,5 @@
+
+  
 """
 Equipo 3
 Carlos Alberto Martinez Gallegos
@@ -7,6 +9,8 @@ Miriam Paola Rodriguez Martin
 """
 from ctypes.wintypes import PFILETIME
 import funciones as funct
+
+protocolo_actual = ""
 lista_datos = []
 lista_IP = []
 dicc_paraARP = funct.hardwareTypes
@@ -14,7 +18,7 @@ dict_type = {"08:00": "IPv4", #para ethernet
              "08:06": "ARP",
              "80:35": "RARP",
              "86:dd": "IPv6"}
-with open("./Files/ipv6_icmpv6_ping.bin", mode="rb") as file:
+with open("./Files/ethernet_ipv4_tcp.bin", mode="rb") as file:
     content = file.read()
     for _bytes in content:
         lista_datos.append(hex(_bytes)[2:].zfill(2))
@@ -39,7 +43,8 @@ with open("./Files/ipv6_icmpv6_ping.bin", mode="rb") as file:
         funct.deleteElements(lista_IP, 2)
         print("Tiempo de vida:", int(lista_IP[0], 16))
         lista_IP.remove(lista_IP[0])
-        print("Protocolo:", funct.protocolos[str(int(lista_IP[0], 16))])
+        protocolo_actual = funct.protocolos[str(int(lista_IP[0], 16))]
+        print("Protocolo:", protocolo_actual)
         lista_IP.remove(lista_IP[0])
         print("Checksum:", lista_IP[0], lista_IP[1])
         funct.deleteElements(lista_IP, 2)
@@ -47,12 +52,51 @@ with open("./Files/ipv6_icmpv6_ping.bin", mode="rb") as file:
         funct.deleteElements(lista_IP, 4)
         print("Direccion IP de destino:", funct.CrearDireccion(lista_IP[0] + lista_IP[1] + lista_IP[2] + lista_IP[3]))
         funct.deleteElements(lista_IP, 4)
-        funct.compararICMP(lista_IP[0], 0)
-        lista_IP.remove(lista_IP[0])
-        funct.compararICMP(lista_IP[0], 1)
-        lista_IP.remove(lista_IP[0])
-        print("Checksum: " + lista_IP[0] + ":" + lista_IP[1])
-        funct.deleteElements(lista_IP, 2)
+        if protocolo_actual == "ICMPv4":
+            funct.compararICMP(lista_IP[0], 0)
+            lista_IP.remove(lista_IP[0])
+            funct.compararICMP(lista_IP[0], 1)
+            lista_IP.remove(lista_IP[0])
+            print("Checksum: " + lista_IP[0] + ":" + lista_IP[1])
+            funct.deleteElements(lista_IP, 2)
+        elif protocolo_actual == "TCP":
+            print("Puerto de origen:" , funct.puertos(lista_IP[0] + lista_IP[1]))
+            funct.deleteElements(lista_IP, 2)
+            print("Puerto de destino:",funct.puertos(lista_IP[0] + lista_IP[1]))
+            funct.deleteElements(lista_IP, 2)
+            temp = lista_IP[0] + lista_IP[1] + lista_IP[2] + lista_IP[3]
+            print("Numero de secuencia:", (int(temp, 16)))
+            funct.deleteElements(lista_IP, 4)
+            temp = lista_IP[0] + lista_IP[1] + lista_IP[2] + lista_IP[3]
+            print("Numero de acuse de recibo:", (int(temp, 16)))
+            funct.deleteElements(lista_IP, 4)
+            print("Longitud de cabecera:", (int(lista_IP[0][0], 16)), "palabras")
+            binario = funct.toBinary(lista_IP[0][1], 4)
+            print("NS:", binario[-1])
+            lista_IP.remove(lista_IP[0])
+            binario = funct.toBinary(lista_IP[0], 8)
+            print("CWR:", binario[0])
+            print("ECE:", binario[1])
+            print("URG:", binario[2])
+            print("ACK:", binario[3])
+            print("PSH:", binario[4])
+            print("RST:", binario[5])
+            print("SYN:", binario[6])
+            print("FIN:", binario[7])
+            lista_IP.remove(lista_IP[0])
+            temp = lista_IP[0] + lista_IP[1] 
+            print("Tamano de ventana:", (int(temp, 16)))
+            funct.deleteElements(lista_IP, 2)
+            print("Checksum: " + lista_IP[0] + ":" + lista_IP[1])
+            funct.deleteElements(lista_IP, 2)
+            if binario[2] == "1":
+                temp = lista_IP[0] + lista_IP[1]
+                print("Puntero urgente:", (int(temp, 16)))
+            else:
+                pass
+            funct.deleteElements(lista_IP, 2)
+        elif protocolo_actual == "UDP":
+            pass
         print(funct.imprimirDatos(lista_IP, name="Data"))
     elif (dict_type[f'{lista_datos[12]}:{lista_datos[13]}'] == "ARP" or dict_type[f'{lista_datos[12]}:{lista_datos[13]}'] == "RARP"):
         print(dict_type[f'{lista_datos[12]}:{lista_datos[13]}'])
@@ -82,21 +126,57 @@ with open("./Files/ipv6_icmpv6_ping.bin", mode="rb") as file:
         funct.deleteElements(lista_IP, 4)
         print("Tamano de datos:", int(lista_IP[0]+lista_IP[1], 16), "octetos")
         funct.deleteElements(lista_IP, 2)
-        print("Encabezado siguiente:", funct.protocolos[str(int(lista_IP[0], 16))]) #icmpv6
+        protocolo_actual = funct.protocolos[str(int(lista_IP[0], 16))] 
+        print("Encabezado siguiente:", protocolo_actual) #icmpv6
         lista_IP.remove(lista_IP[0])
-        print("Limite de salto:", int(lista_IP[0], 16))
-        lista_IP.remove(lista_IP[0])
-        print("Direccion de origen:", funct.CodeAddresses(lista_IP, 16))
-        funct.deleteElements(lista_IP, 16)
-        print("Direccion de destino:", funct.CodeAddresses(lista_IP, 16))
-        funct.deleteElements(lista_IP, 16)
-        print(funct.imprimirDatos(lista_IP, name="Data"))
-        funct.compararICMPV6(lista_IP[0] + lista_IP[1])
-        funct.deleteElements(lista_IP, 2)
-        print("Checksum:", lista_IP[0] + ":" + lista_IP[1])
-        funct.deleteElements(lista_IP, 2)
+        if protocolo_actual == "ICMPv6":
+            print("Limite de salto:", int(lista_IP[0], 16))
+            lista_IP.remove(lista_IP[0])
+            print("Direccion de origen:", funct.CodeAddresses(lista_IP, 16))
+            funct.deleteElements(lista_IP, 16)
+            print("Direccion de destino:", funct.CodeAddresses(lista_IP, 16))
+            funct.deleteElements(lista_IP, 16)
+            print(funct.imprimirDatos(lista_IP, name="Data"))
+            funct.compararICMPV6(lista_IP[0] + lista_IP[1])
+            funct.deleteElements(lista_IP, 2)
+            print("Checksum:", lista_IP[0] + ":" + lista_IP[1])
+            funct.deleteElements(lista_IP, 2)
+        elif protocolo_actual == "TCP":
+            print("Puerto de origen:" , funct.puertos(lista_IP[0] + lista_IP[1]))
+            funct.deleteElements(lista_IP, 2)
+            print("Puerto de destino:",funct.puertos(lista_IP[0] + lista_IP[1]))
+            funct.deleteElements(lista_IP, 2)
+            temp = lista_IP[0] + lista_IP[1] + lista_IP[2] + lista_IP[3]
+            print("Numero de secuencia:", (int(temp, 16)))
+            funct.deleteElements(lista_IP, 4)
+            temp = lista_IP[0] + lista_IP[1] + lista_IP[2] + lista_IP[3]
+            print("Numero de acuse de recibo:", (int(temp, 16)))
+            funct.deleteElements(lista_IP, 4)
+            print("Longitud de cabecera:", (int(lista_IP[0][0], 16)), "palabras")
+            binario = funct.toBinary(lista_IP[0][1], 4)
+            print("NS:", binario[-1])
+            lista_IP.remove(lista_IP[0])
+            binario = funct.toBinary(lista_IP[0], 8)
+            print("CWR:", binario[0])
+            print("ECE:", binario[1])
+            print("URG:", binario[2])
+            print("ACK:", binario[3])
+            print("PSH:", binario[4])
+            print("RST:", binario[5])
+            print("SYN:", binario[6])
+            print("FIN:", binario[7])
+            lista_IP.remove(lista_IP[0])
+            temp = lista_IP[0] + lista_IP[1] 
+            print("Tamano de ventana:", (int(temp, 16)))
+            funct.deleteElements(lista_IP, 2)
+            print("Checksum: " + lista_IP[0] + ":" + lista_IP[1])
+            funct.deleteElements(lista_IP, 2)
+            if binario[2] == "1":
+                temp = lista_IP[0] + lista_IP[1]
+                print("Puntero urgente:", (int(temp, 16)))
+            else:
+                pass
+            funct.deleteElements(lista_IP, 2)
+        elif protocolo_actual == "UDP":
+            pass
         print(lista_IP)
-        #print("Protocolo:", funct.protocolos[str(int(lista_IP[0], 16))])
-        
-
-

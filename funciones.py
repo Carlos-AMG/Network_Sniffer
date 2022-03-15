@@ -1,4 +1,24 @@
 import re
+from tokenize import Hexnumber
+
+
+ports_dict = {
+    "20" : "FTP", 
+    "21" : "FTP",
+    "22" : "SSH",
+    "23" : "TELNET",
+    "25" : "SMTP",
+    "53" : "DNS",
+    "67" : "DHCP",
+    "68" : "DHCP",
+    "69" : "TFTP",
+    "80" : "HTTP",
+    "110" : "POP3",
+    "143" : "IMAP",
+    "443" : "HTTPS",
+    "993" : "IMAP SSL",
+    "995" : "POP SSL"
+}
 
 
 TOS_dict = {"000": "De rutina", #Types of service, ipv4
@@ -195,3 +215,14 @@ def compararICMPV6(data, choice=True):
     print("Tipo:", aux[0])
     if aux[1]:
         print("Codigo:", aux[1][byte2])
+
+def puertos(data):
+    """Para TCP tanto para ipv4 e ipv6"""
+    num = (int(data, 16))
+    if (0 <= num <= 1023):
+        num = str(num)
+        return (f"{num} - Puertos bien conocidos:", ports_dict[num]) 
+    elif ( 1024 <= num <= 49151):
+        return (f"{num} - Puertos registrados")
+    elif (49152 <= num <= 65535):
+        return (f"{num} - Puertos dinamicos o privados")
