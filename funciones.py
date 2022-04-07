@@ -221,7 +221,8 @@ def puertos(data):
     num = (int(data, 16))
     if (0 <= num <= 1023):
         num = str(num)
-        return (f"{num} - Puertos bien conocidos:", ports_dict[num]) 
+        temp = f"{num} - Puertos bien conocidos: " + ports_dict[num]
+        return  temp
     elif ( 1024 <= num <= 49151):
         return (f"{num} - Puertos registrados")
     elif (49152 <= num <= 65535):
