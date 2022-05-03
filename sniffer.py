@@ -21,11 +21,12 @@ dict_type = {"08:00": "IPv4", #para ethernet
              "08:06": "ARP",
              "80:35": "RARP",
              "86:dd": "IPv6"}
-with open("Files/ethernet_ipv4_udp_dns.bin", mode="rb") as file:
+with open("Files/ethernet_ipv4_udp_dns_1.bin", mode="rb") as file:
     content = file.read()
     for _bytes in content:
         lista_datos.append(hex(_bytes)[2:].zfill(2))
     lista_IP = lista_datos[14:]
+    lista_original = lista_datos[:]
     print("\tEthernet")
     print(funct.imprimirDatos(lista_datos, name="Target"))
     print(funct.imprimirDatos(lista_datos, name="Source"))
@@ -65,8 +66,10 @@ with open("Files/ethernet_ipv4_udp_dns.bin", mode="rb") as file:
         elif protocolo_actual == "TCP":
             print("\tTCP")
             print("Puerto de origen:" , funct.puertos(lista_IP[0] + lista_IP[1]))
+            auxiliar_portv1 = int(lista_IP[0] + lista_IP[1], 16)
             funct.deleteElements(lista_IP, 2)
             print("Puerto de destino:",funct.puertos(lista_IP[0] + lista_IP[1]))
+            auxiliar_portv2 = int(lista_IP[0] + lista_IP[1], 16)
             funct.deleteElements(lista_IP, 2)
             temp = lista_IP[0] + lista_IP[1] + lista_IP[2] + lista_IP[3]
             print("Numero de secuencia:", (int(temp, 16)))
@@ -99,92 +102,28 @@ with open("Files/ethernet_ipv4_udp_dns.bin", mode="rb") as file:
             else:
                 pass
             funct.deleteElements(lista_IP, 2)
+            if auxiliar_portv1 == 53 or auxiliar_portv2 == 53:
+                temp = funct.DNS(lista_IP, lista_original)
         elif protocolo_actual == "UDP":
             print("\tUDP")
+            # print(funct.imprimirDatos(lista_IP, name="Data"))
             print("Puerto de origen:" , funct.puertos(lista_IP[0] + lista_IP[1]))
+            auxiliar_portv1 = int(lista_IP[0] + lista_IP[1], 16)
+            # print("This is the auxiliar port 1:", auxiliar_portv1)
             funct.deleteElements(lista_IP, 2)
             print("Puerto de destino:",funct.puertos(lista_IP[0] + lista_IP[1]))
-            auxiliar_portv = int(lista_IP[0] + lista_IP[1], 16)
+            auxiliar_portv2 = int(lista_IP[0] + lista_IP[1], 16)
+            # print("This is the auxiliar port 2:", auxiliar_portv2)
             funct.deleteElements(lista_IP, 2)
             temp = lista_IP[0] + lista_IP[1] 
             print("Longitud total:", (int(temp, 16)))
             funct.deleteElements(lista_IP, 2)
             print("Checksum: " + lista_IP[0] + ":" + lista_IP[1])
             funct.deleteElements(lista_IP,2)
-            if auxiliar_portv == 53:
-                print("\tDNS")
-                print("ID:", lista_IP[0] + lista_IP[1])
-                funct.deleteElements(lista_IP, 2)
-                bin_aux = funct.toBinary(lista_IP[0] + lista_IP[1], 16)
-                print("QR:", "Respuesta" if bin_aux[0] == "1" else "Consulta")
-                bin_aux = bin_aux[1:]
-                opcode_dec = int(bin_aux[:5], 16)
-                if (opcode_dec == 0):
-                    opcode_aux = "QUERY"
-                elif (opcode_dec == 1):
-                    opcode_aux = "IQUERY"
-                elif (opcode_dec == 2):
-                    opcode_aux = "STATUS"
-                else:
-                    opcode_aux = "UNDEFINED"
-                print("Op code:", opcode_aux)
-                bin_aux = bin_aux[4:]
-                print("AA:", "Respuesta" if bin_aux[0] == "1" else "Sin respuesta")
-                bin_aux = bin_aux[1:]
-                print("TC:", "Mensaje demasiado largo" if bin_aux[0] == "1" else "Mensaje permitido")
-                bin_aux = bin_aux[1:]
-                print("RD:", bin_aux[0]) #preguntar por todas estas banderas
-                bin_aux = bin_aux[1:]
-                print("RA:", bin_aux[0])
-                bin_aux = bin_aux[1:]
-                print("Z:", bin_aux[:4])
-                bin_aux = bin_aux[3:]
-                rcode_dec = int(bin_aux[:5], 16)
-                if (rcode_dec == 0):
-                    rcode_aux = "Ningun error"
-                elif (rcode_dec == 1):
-                    rcode_aux = "Error de formato"
-                elif (rcode_dec == 2):
-                    rcode_aux = "Fallo en el servidor"
-                elif (rcode_dec == 3):
-                    rcode_aux = "Error en nombre"
-                elif (rcode_dec == 4):
-                    rcode_aux = "No implementado"
-                elif (rcode_dec == 5):
-                    rcode_aux = "Rechazado"
-                else:
-                    rcode_aux = "UNDEFINED"
-                print("Rcode:", rcode_aux)
-                bin_aux = bin_aux[4:]
-                funct.deleteElements(lista_IP, 2)
-                print("QDcount:", int(lista_IP[0] + lista_IP[1], 16))
-                funct.deleteElements(lista_IP, 2)
-                print("ANcount:", int(lista_IP[0] + lista_IP[1], 16))
-                funct.deleteElements(lista_IP, 2)
-                print("NScount:", int(lista_IP[0] + lista_IP[1], 16))
-                funct.deleteElements(lista_IP, 2)
-                print("ARcount:", int(lista_IP[0] + lista_IP[1], 16))
-                funct.deleteElements(lista_IP, 2)
-                # aqui sacamos los hex para luego formar el ascii
-                """Copiamos la lista por si acaso y trabajamos con esa"""
-                lista_copia = lista_IP[:]
-                contador = 1
-                while lista_copia[0] != "00":
-                    saltos = int(lista_copia[0], 16)
-                    print(saltos)
-                    variables_dns[f"variable{contador -1}"] = lista_copia[1:saltos + 1]
-                    contador += 1
-                    funct.deleteElements(lista_copia, saltos + 1)
-                #aqui ya formamos el ascii
-                print(variables_dns)
-                domain = ""
-                for keys in variables_dns:
-                    for values in variables_dns[keys]:
-                            domain += str(bytes.fromhex(values).decode("ASCII")) #esto por usar python3 sino usar metodo decode(hex)
-                    domain += "."
-                domain  = domain[:-1]
-                print(domain)
-        print(funct.imprimirDatos(lista_copia, name="Data"))
+            if auxiliar_portv1 == 53 or auxiliar_portv2 == 53:
+                temp = funct.DNS(lista_IP, lista_original)
+            #     print("\tDNS")
+        # print(funct.imprimirDatos(lista_copia, name="Data"))
         # print(funct.imprimirDatos(lista_IP, name="Data"))
     elif (dict_type[f'{lista_datos[12]}:{lista_datos[13]}'] == "ARP" or dict_type[f'{lista_datos[12]}:{lista_datos[13]}'] == "RARP"):
         print(dict_type[f'{lista_datos[12]}:{lista_datos[13]}'])
@@ -233,8 +172,10 @@ with open("Files/ethernet_ipv4_udp_dns.bin", mode="rb") as file:
         elif protocolo_actual == "TCP":
             print("\tTCP")
             print("Puerto de origen:" , funct.puertos(lista_IP[0] + lista_IP[1]))
+            auxiliar_portv1 = int(lista_IP[0] + lista_IP[1], 16)
             funct.deleteElements(lista_IP, 2)
             print("Puerto de destino:",funct.puertos(lista_IP[0] + lista_IP[1]))
+            auxiliar_portv2 = int(lista_IP[0] + lista_IP[1], 16)
             funct.deleteElements(lista_IP, 2)
             temp = lista_IP[0] + lista_IP[1] + lista_IP[2] + lista_IP[3]
             print("Numero de secuencia:", (int(temp, 16)))
@@ -267,16 +208,22 @@ with open("Files/ethernet_ipv4_udp_dns.bin", mode="rb") as file:
             else:
                 pass
             funct.deleteElements(lista_IP, 2)
+            if auxiliar_portv1 == 53 or auxiliar_portv2 == 53:
+                temp = funct.DNS(lista_IP, lista_original)
         elif protocolo_actual == "UDP":
             print("\tUDP")
             print("Puerto de origen:" , funct.puertos(lista_IP[0] + lista_IP[1]))
+            auxiliar_portv1 = int(lista_IP[0] + lista_IP[1], 16)
             funct.deleteElements(lista_IP, 2)
             print("Puerto de destino:",funct.puertos(lista_IP[0] + lista_IP[1]))
+            auxiliar_portv2 = int(lista_IP[0] + lista_IP[1], 16)
             funct.deleteElements(lista_IP, 2)
             temp = lista_IP[0] + lista_IP[1] 
             print("Longitud total:", (int(temp, 16)))
             funct.deleteElements(lista_IP, 2)  
             print("Checksum: " + lista_IP[0] + ":" + lista_IP[1])
             funct.deleteElements(lista_IP,2)
-        print(funct.imprimirDatos(lista_IP, name="Data"))
+            if auxiliar_portv1 == 53 or auxiliar_portv2 == 53:
+                temp = funct.DNS(lista_IP, lista_original)
+        # print(funct.imprimirDatos(lista_IP, name="Data"))
         # print(lista_IP)

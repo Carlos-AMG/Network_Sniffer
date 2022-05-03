@@ -1,5 +1,16 @@
-import re
-from tokenize import Hexnumber
+
+from termcolor import colored
+
+dns_types = {
+    "1": "A",
+    "5" : "CNAME",
+    "13": "HINFO", 
+    "15": "MX",
+    "22": "NS",
+    "23" : "NS"
+}
+
+
 
 
 ports_dict = {
@@ -227,3 +238,175 @@ def puertos(data):
         return (f"{num} - Puertos registrados")
     elif (49152 <= num <= 65535):
         return (f"{num} - Puertos dinamicos o privados")
+
+
+def DNS(lista_copia, lista_original):
+    print("\tDNS")
+    variables_dns = {}
+    preguntas_dns = {}
+    respuestas_dns = {}
+    lista_copia = lista_copia[:]
+    print("ID:", lista_copia[0] + lista_copia[1])
+    deleteElements(lista_copia, 2)
+    bin_aux = toBinary(lista_copia[0] + lista_copia[1], 16)
+    print("QR:", "Respuesta" if bin_aux[0] == "1" else "Consulta")
+    bin_aux = bin_aux[1:]
+    opcode_dec = int(bin_aux[:5], 16)
+    if (opcode_dec == 0):
+        opcode_aux = "QUERY"
+    elif (opcode_dec == 1):
+        opcode_aux = "IQUERY"
+    elif (opcode_dec == 2):
+        opcode_aux = "STATUS"
+    else:
+        opcode_aux = "UNDEFINED"
+    print("Op code:", opcode_aux)
+    bin_aux = bin_aux[4:]
+    print("AA:", "Respuesta" if bin_aux[0] == "1" else "Sin respuesta")
+    bin_aux = bin_aux[1:]
+    print("TC:", "Mensaje demasiado largo" if bin_aux[0] == "1" else "Mensaje permitido")
+    bin_aux = bin_aux[1:]
+    print("RD:", bin_aux[0]) #preguntar por todas estas banderas
+    bin_aux = bin_aux[1:]
+    print("RA:", bin_aux[0])
+    bin_aux = bin_aux[1:]
+    print("Z:", bin_aux[:4])
+    bin_aux = bin_aux[3:]
+    rcode_dec = int(bin_aux[:5], 16)
+    if (rcode_dec == 0):
+        rcode_aux = "Ningun error"
+    elif (rcode_dec == 1):
+        rcode_aux = "Error de formato"
+    elif (rcode_dec == 2):
+        rcode_aux = "Fallo en el servidor"
+    elif (rcode_dec == 3):
+        rcode_aux = "Error en nombre"
+    elif (rcode_dec == 4):
+        rcode_aux = "No implementado"
+    elif (rcode_dec == 5):
+        rcode_aux = "Rechazado"
+    else:
+        rcode_aux = "UNDEFINED"
+    print("Rcode:", rcode_aux)
+    bin_aux = bin_aux[4:]
+    deleteElements(lista_copia, 2)
+    print("QDcount:", int(lista_copia[0] + lista_copia[1], 16))
+    preguntas = int(lista_copia[0] + lista_copia[1], 16)
+    deleteElements(lista_copia, 2)
+    print("ANcount:", int(lista_copia[0] + lista_copia[1], 16))
+    respuestas = int(lista_copia[0] + lista_copia[1], 16)
+    deleteElements(lista_copia, 2)
+    print("NScount:", int(lista_copia[0] + lista_copia[1], 16))
+    deleteElements(lista_copia, 2)
+    print("ARcount:", int(lista_copia[0] + lista_copia[1], 16))
+    deleteElements(lista_copia, 2)
+
+    # aqui sacamos los hex para luego formar el ascii
+    """Copiamos la lista por si acaso y trabajamos con esa"""
+    counter = 0
+    array = []
+    for _ in range(0, preguntas):
+        array.clear()
+        array.append("Nombre de dominio: " + to_ascii(lista_copia))
+        deleteElements(lista_copia, 1)
+        array.append("Tipo: " +  dns_types[str(int(lista_copia[0] + lista_copia[1], 16))])
+        deleteElements(lista_copia, 2)
+        array.append("Clase: " + "IN" if int(lista_copia[0] + lista_copia[1], 16) == 1 else "CH")
+        deleteElements(lista_copia, 2)
+        copia = array[:]
+        preguntas_dns[f"pregunta{counter}"] = copia
+        counter += 1
+    print(colored("Preguntas", "blue"))
+    for x in preguntas_dns:
+        print(x + ":")
+        for y in preguntas_dns[x]:
+            print(y)
+    # print(preguntas_dns)
+    # print("current list", lista_copia)
+    
+    counter = 0
+    seek_pos = int(lista_copia[0] + lista_copia[1], 16)
+    print(colored("This is the seek position " + str(seek_pos), "blue"))
+    # print("Lista original", lista_original)
+    flag = True
+    for _ in range(0, respuestas):
+        array.clear()
+        lista_original_copia = lista_original[seek_pos - 1:]
+        array.append("Nombre de dominio: " + to_ascii(lista_original_copia))
+        if (flag):
+            deleteElements(lista_original_copia,1 + 6)
+        else:
+            deleteElements(lista_original_copia, 2)
+        # print("Lista original copia ->>>>>>>>>>>>:", lista_original_copia)
+        """Aqui abajo esta el problema, necesitamos arreglar cuando no es direccion con puntos, en el to_ascii tenemos que arreglar
+        que si no es de punto, haga otra cosa"""
+        respuestas_type = dns_types[str(int(lista_original_copia[0] + lista_original_copia[1], 16))] 
+        print(colored(respuestas_type, "green"))
+        array.append("Tipo de respuesta: " + respuestas_type)
+        deleteElements(lista_original_copia, 2)
+        array.append("Clase: " + str(int(lista_original_copia[0] + lista_original_copia[1], 16)))
+        deleteElements(lista_original_copia, 2)
+        # print("Lista original copia ->>>>>>>>>>>>:", lista_original_copia)
+        array.append("Tiempo de vida: " + str(int(lista_original_copia[0] + lista_original_copia[1] + lista_original_copia[2] + lista_original_copia[3], 16)))
+        deleteElements(lista_original_copia, 4)
+        array.append("Longitud de datos: " + str(int(lista_original_copia[0] + lista_original_copia[1], 16)))
+        deleteElements(lista_original_copia, 2)
+        if (respuestas_type == "A"):
+            array.append("RDATA: " + CrearDireccion(lista_original_copia[0] + lista_original_copia[1] + lista_original_copia[2] + lista_original_copia[3]))
+        elif (respuestas_type == "CNAME"):
+            array.append("RDATA: " + to_ascii(lista_original_copia))
+        elif (respuestas_type == "MX"):
+            pass
+        elif (respuestas_type == ""):
+            pass
+        seek_pos = int(lista_original_copia[0] + lista_original_copia[1], 16)
+        copia = array[:]
+        respuestas_dns[f"respuesta{counter}"] = copia
+        # print(respuestas_dns)
+        counter += 1
+        flag = False
+    print(colored("Respuestas", "blue"))
+    for x in respuestas_dns:
+        print(x + ":")
+        for y in respuestas_dns[x]:
+            print(y)
+    # print(imprimirDatos(lista_original_copia, name="Data"))
+    # print(imprimirDatos(lista_original_copia, name="Data"))
+    # print(imprimirDatos(lista_copia, name="Data"))
+
+def to_ascii(lista_copia):
+    flag = False
+    contador = 1
+    variables_dns = {}
+    copied = lista_copia[:]
+    while copied[0] != "00":
+        saltos = int(copied[0], 16)
+        try:
+            # deleteElements(copied, saltos + 1)
+            for x in range(0, saltos + 1):
+                copied.pop(0)
+        except:
+            name = ""
+            contador = int(lista_copia[0], 16)
+            lista_copia.pop(0)
+            for x in range(0 , contador):
+                name += str(bytes.fromhex(lista_copia[0]).decode("ASCII"))
+                lista_copia.pop(0)
+            lista_copia.pop(0)
+            lista_copia.pop(0)
+            return name
+        #aqui hacer lo del punto en la actual
+    while lista_copia[0] != "00":
+        saltos = int(lista_copia[0], 16)
+        variables_dns[f"variable{contador -1}"] = lista_copia[1:saltos + 1]
+        contador += 1
+        deleteElements(lista_copia, saltos + 1)
+    #aqui ya formamos el ascii
+    domain = ""
+    for keys in variables_dns:
+        for values in variables_dns[keys]:
+            domain += str(bytes.fromhex(values).decode("ASCII")) #esto por usar python3 sino usar metodo decode(hex)
+        domain += "."
+    domain  = domain[:-1]
+    # lista_copia.remove(lista_copia[0])
+    return domain
