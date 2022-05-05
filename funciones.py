@@ -1,5 +1,6 @@
 
-from termcolor import colored
+from multiprocessing.sharedctypes import Value
+
 
 dns_types = {
     "1": "A",
@@ -241,11 +242,13 @@ def puertos(data):
 
 
 def DNS(lista_copia, lista_original):
-    print("\tDNS")
+    print("\tDNS\a\a\a\a\a\a\a\a\a")
     variables_dns = {}
     preguntas_dns = {}
     respuestas_dns = {}
     lista_copia = lista_copia[:]
+    print(lista_original)
+    print(lista_copia)
     print("ID:", lista_copia[0] + lista_copia[1])
     deleteElements(lista_copia, 2)
     bin_aux = toBinary(lista_copia[0] + lista_copia[1], 16)
@@ -303,20 +306,24 @@ def DNS(lista_copia, lista_original):
 
     # aqui sacamos los hex para luego formar el ascii
     """Copiamos la lista por si acaso y trabajamos con esa"""
+    
     counter = 0
     array = []
     for _ in range(0, preguntas):
         array.clear()
         array.append("Nombre de dominio: " + to_ascii(lista_copia))
         deleteElements(lista_copia, 1)
-        array.append("Tipo: " +  dns_types[str(int(lista_copia[0] + lista_copia[1], 16))])
+        try:
+            array.append("Tipo: " +  dns_types[str(int(lista_copia[0] + lista_copia[1], 16))])
+        except ValueError:
+            array.append("Tipo: Unkwown")
         deleteElements(lista_copia, 2)
         array.append("Clase: " + "IN" if int(lista_copia[0] + lista_copia[1], 16) == 1 else "CH")
         deleteElements(lista_copia, 2)
         copia = array[:]
         preguntas_dns[f"pregunta{counter}"] = copia
         counter += 1
-    print(colored("Preguntas", "blue"))
+    print("Preguntas")
     for x in preguntas_dns:
         print(x + ":")
         for y in preguntas_dns[x]:
@@ -326,7 +333,7 @@ def DNS(lista_copia, lista_original):
     
     counter = 0
     seek_pos = int(lista_copia[0] + lista_copia[1], 16)
-    print(colored("This is the seek position " + str(seek_pos), "blue"))
+    print("This is the seek position " + str(seek_pos))
     # print("Lista original", lista_original)
     flag = True
     for _ in range(0, respuestas):
@@ -340,8 +347,11 @@ def DNS(lista_copia, lista_original):
         # print("Lista original copia ->>>>>>>>>>>>:", lista_original_copia)
         """Aqui abajo esta el problema, necesitamos arreglar cuando no es direccion con puntos, en el to_ascii tenemos que arreglar
         que si no es de punto, haga otra cosa"""
-        respuestas_type = dns_types[str(int(lista_original_copia[0] + lista_original_copia[1], 16))] 
-        print(colored(respuestas_type, "green"))
+        try:
+            respuestas_type = dns_types[str(int(lista_original_copia[0] + lista_original_copia[1], 16))] 
+        except ValueError:
+            respuestas_type = "Unkwown"
+        print(respuestas_type)
         array.append("Tipo de respuesta: " + respuestas_type)
         deleteElements(lista_original_copia, 2)
         array.append("Clase: " + str(int(lista_original_copia[0] + lista_original_copia[1], 16)))
@@ -365,7 +375,7 @@ def DNS(lista_copia, lista_original):
         # print(respuestas_dns)
         counter += 1
         flag = False
-    print(colored("Respuestas", "blue"))
+    print("Respuestas")
     for x in respuestas_dns:
         print(x + ":")
         for y in respuestas_dns[x]:
